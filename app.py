@@ -3,10 +3,11 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QFileDialog
 
 # VTK
-from QtOrthoViewer import *
-from QtSegmentationViewer import QtSegmentationViewer
-from VtkBase import VtkBase
-from ViewersConnection import ViewersConnection
+from viewers.QtOrthoViewer import *
+from viewers.QtSegmentationViewer import QtSegmentationViewer
+from components.VtkBase import VtkBase
+from components.ViewersConnection import ViewersConnection
+from viewers.ROIViewer import ROIViewer
 
 # Main Window
 class MainWindow(QtWidgets.QMainWindow):
@@ -26,20 +27,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtSagittalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_YZ, "Sagittal Plane - YZ")
         self.QtCoronalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XZ, "Coronal Plane - XZ")
         self.QtAxialOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY, "Axial Plane - XY")
-        self.QtSegmentationViewer = QtSegmentationViewer(self.vtkBaseClass, label="3D Viewer")
+        self.QtExtraViewer = QtSegmentationViewer(self.vtkBaseClass, label="Extra Viewer")
         
         self.ViewersConnection = ViewersConnection(self.vtkBaseClass)
         self.ViewersConnection.add_orthogonal_viewer(self.QtSagittalOrthoViewer.get_viewer())
         self.ViewersConnection.add_orthogonal_viewer(self.QtCoronalOrthoViewer.get_viewer())
         self.ViewersConnection.add_orthogonal_viewer(self.QtAxialOrthoViewer.get_viewer())
-        self.ViewersConnection.add_segmentation_viewer(self.QtSegmentationViewer.get_viewer())
+        self.ViewersConnection.add_segmentation_viewer(self.QtExtraViewer.get_viewer())
 
         # Set up the main layout
         main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         
         left_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         left_splitter.addWidget(self.QtAxialOrthoViewer)
-        left_splitter.addWidget(self.QtSegmentationViewer)
+        left_splitter.addWidget(self.QtExtraViewer)
         
         right_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         right_splitter.addWidget(self.QtCoronalOrthoViewer)
@@ -58,6 +59,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Connect signals and slots
         self.connect()
+
+        # ROI Viewer
+        self.roi_viewer = ROIViewer(self.QtExtraViewer.get_interactor(), self.vtkBaseClass)
+        self.roi_viewer.off()
     
     # Connect signals and slots         
     def connect(self):
@@ -68,19 +73,34 @@ class MainWindow(QtWidgets.QMainWindow):
         menu_bar = self.menuBar()
 
         file_menu = menu_bar.addMenu("File")
+        roi_menu = menu_bar.addMenu("ROI")
 
         open_action = QtWidgets.QAction("Open Image", self)
         open_action.setShortcut("Ctrl+o")
+        open_folder_action = QtWidgets.QAction("Open DICOM", self)
+        open_folder_action.setShortcut("Ctrl+f")
+        self.toggle_roi_action = QtWidgets.QAction("Toggle ROI", self)
+        self.toggle_roi_action.setShortcut("Ctrl+r")
 
         open_action.triggered.connect(self.open_data)
+        open_folder_action.triggered.connect(self.open_folder)
+        self.toggle_roi_action.triggered.connect(self.toggle_roi)
 
         file_menu.addAction(open_action)
+        file_menu.addAction(open_folder_action)
+        roi_menu.addAction(self.toggle_roi_action)
+
+    def toggle_roi(self):
+        if self.toggle_roi_action.isChecked():
+            self.roi_viewer.on()
+        else:
+            self.roi_viewer.off()
 
     # Open data
     def open_data(self):
         file_dialog = QFileDialog()
         file_dialog.setFileMode(QFileDialog.ExistingFile)
-        file_dialog.setNameFilter("Image Files (*.mhd)")
+        file_dialog.setNameFilter("Image Files (*.nii *.nii.gz *.mhd)")
         if file_dialog.exec_():
             filenames = file_dialog.selectedFiles()
             if len(filenames) > 0:
@@ -90,7 +110,20 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.render_data()
                 except Exception as e:
                     print(e)
-                    QtWidgets.QMessageBox.critical(self, "Error", "Unable to open the image file.")                    
+                    QtWidgets.QMessageBox.critical(self, "Error", "Unable to open the image file.")
+
+    def open_folder(self):
+        folder_dialog = QFileDialog()
+        folder_dialog.setFileMode(QFileDialog.Directory)
+        folder_dialog.setOption(QFileDialog.ShowDirsOnly, True)
+        if folder_dialog.exec_():
+            folder_path = folder_dialog.selectedFiles()[0]
+            try:
+                self.load_data(folder_path)
+                self.render_data()
+            except Exception as e:
+                print(e)
+                QtWidgets.QMessageBox.critical(self, "Error", "Unable to open the folder.")
 
     # Load the data
     def load_data(self, filename):
@@ -98,15 +131,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtAxialOrthoViewer.connect_on_data(filename)
         self.QtCoronalOrthoViewer.connect_on_data(filename)
         self.QtSagittalOrthoViewer.connect_on_data(filename)
-        self.QtSegmentationViewer.connect_on_data(filename)
+        self.QtExtraViewer.connect_on_data(filename)
         self.ViewersConnection.connect_on_data()
+        self.roi_viewer.box_widget.SetInputData(self.vtkBaseClass.imageReader.GetOutput())
+        self.roi_viewer.box_widget.PlaceWidget()
     
     # Render the data   
     def render_data(self):
         self.QtAxialOrthoViewer.render()
         self.QtCoronalOrthoViewer.render()
         self.QtSagittalOrthoViewer.render()
-        self.QtSegmentationViewer.render()
+        self.QtExtraViewer.render()
 
     # Close the application
     def closeEvent(self, QCloseEvent):
@@ -114,7 +149,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtAxialOrthoViewer.close()
         self.QtCoronalOrthoViewer.close()
         self.QtSagittalOrthoViewer.close()
-        self.QtSegmentationViewer.close()
+        self.QtExtraViewer.close()
     
     # Exit the application  
     def exit(self):

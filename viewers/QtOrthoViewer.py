@@ -1,12 +1,11 @@
-
-from OrthoViewer import *
+from .OrthoViewer import *
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from Worker import *
+from utils.Worker import *
 
-from QtViewer import *
+from .QtViewer import *
 
 class QtOrthoViewer(QtViewer):
 
@@ -42,7 +41,6 @@ class QtOrthoViewer(QtViewer):
         self.slider.setSingleStep(1)
         self.slider.setValue(0)
         self.slider.setEnabled(False)
-        self.viewer.commandSliceSelect.sliders[self.orientation] = self.slider
         
         ## Buttons
         self.buttonsLayout = QHBoxLayout()

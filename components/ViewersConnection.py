@@ -1,14 +1,12 @@
 from vtk import *
-from OrthoViewer import *
-from SegmentationViewer import *
-from CommandSliceSelect import CommandSliceSelect
+from viewers.OrthoViewer import *
+from viewers.SegmentationViewer import *
 
 class ViewersConnection():
     
     # Constructor
     def __init__(self, vtkBaseClass:VtkBase) -> None:
         # Properties
-        self.commandSliceSelect = CommandSliceSelect()
         self.orthogonal_viewers = []
         self.segmentation_viewer = None
         self.vtkBaseClass = vtkBaseClass
@@ -28,9 +26,6 @@ class ViewersConnection():
             self.segmentation_viewer.imagePlaneWidgets[i].SetPlaneOrientation(ortho_viewer.orientation)
             self.segmentation_viewer.imagePlaneWidgets[i].SetSliceIndex(self.vtkBaseClass.imageDimensions[ortho_viewer.orientation] // 2)
             
-            self.commandSliceSelect = self.vtkBaseClass.commandSliceSelect
-            self.commandSliceSelect.imagePlaneWidgets[ortho_viewer.orientation] = self.segmentation_viewer.imagePlaneWidgets[i]
-
             self.segmentation_viewer.imagePlaneWidgets[i].SetWindowLevel(self.vtkBaseClass.imageWindowLevel.GetWindow(),self.vtkBaseClass.imageWindowLevel.GetLevel())
             self.segmentation_viewer.imagePlaneWidgets[i].GetColorMap().SetLookupTable(self.orthogonal_viewers[0].grayscaleLut)
 
@@ -48,4 +43,3 @@ class ViewersConnection():
     # Add orthogonal viewer
     def add_orthogonal_viewer(self, orthogonal_viewer):
         self.orthogonal_viewers.append(orthogonal_viewer)
-    

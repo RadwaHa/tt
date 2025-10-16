@@ -1,6 +1,5 @@
-
+import os
 from vtk import *
-from CommandSliceSelect import *
 
 class VtkBase():
     
@@ -64,9 +63,6 @@ class VtkBase():
         self.resliceCursor.SetThickMode(0)
         self.resliceCursor.SetImage(self.imageBlend.GetOutput())
         self.resliceCursor.SetCenter(self.imageBlend.GetOutput().GetCenter())
-       
-        ## Command Slice Select
-        self.commandSliceSelect = CommandSliceSelect()
 
     # Connect to data
     def connect_on_data(self, path:str):
@@ -74,7 +70,15 @@ class VtkBase():
             return
         
         ## Reader
-        self.imageReader.SetFileName(path)
+        if os.path.isdir(path):
+            self.imageReader = vtkDICOMImageReader()
+            self.imageReader.SetDirectoryName(path)
+        elif path.endswith(".nii") or path.endswith(".nii.gz"):
+            self.imageReader = vtkNIFTIImageReader()
+            self.imageReader.SetFileName(path)
+        elif path.endswith(".mhd"):
+            self.imageReader = vtkMetaImageReader()
+            self.imageReader.SetFileName(path)
         self.imageReader.UpdateWholeExtent()
         
         # Update the data information
