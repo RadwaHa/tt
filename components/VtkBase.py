@@ -1,5 +1,6 @@
 import os
 from vtk import *
+from .CommandSliceSelect import CommandSliceSelect
 
 class VtkBase():
     
@@ -63,6 +64,9 @@ class VtkBase():
         self.resliceCursor.SetThickMode(0)
         self.resliceCursor.SetImage(self.imageBlend.GetOutput())
         self.resliceCursor.SetCenter(self.imageBlend.GetOutput().GetCenter())
+
+        ## Command Slice Select
+        self.commandSliceSelect = CommandSliceSelect()
 
     # Connect to data
     def connect_on_data(self, path:str):
