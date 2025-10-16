@@ -34,6 +34,9 @@ class QtViewer(QWidget):
     def get_viewer(self):
         return self.viewer
     
+    def get_interactor(self):
+        return self.viewer.GetRenderWindow().GetInteractor()
+
     # Connect on data    
     def connect_on_data(self, path):
         self.viewer.connect_on_data(path)

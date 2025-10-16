@@ -1,7 +1,7 @@
 # VTK
 from vtk import *
-from VtkViewer import *
-from CommandSliceSelect import *
+from .VtkViewer import *
+from components.CommandSliceSelect import *
 
 class OrthoViewer(VtkViewer):
 
@@ -66,7 +66,7 @@ class OrthoViewer(VtkViewer):
         
         self.resliceCursorWidget.SetDefaultRenderer(self.renderer)
         self.resliceCursorWidget.EnabledOn()
-        
+
         # Command Slice Select
         self.commandSliceSelect = self.vtkBaseClass.commandSliceSelect
         self.commandSliceSelect.resliceCursorWidgets[self.orientation] = self.resliceCursorWidget
@@ -137,9 +137,11 @@ class OrthoViewer(VtkViewer):
         
         self.resliceCursor.Update()
         for i in range(0,3):
-            self.commandSliceSelect.imagePlaneWidgets[i].UpdatePlacement()
-            self.commandSliceSelect.resliceCursorWidgets[i].Render()
-        
+            if self.commandSliceSelect.imagePlaneWidgets[i] is not None:
+                self.commandSliceSelect.imagePlaneWidgets[i].UpdatePlacement()
+            if self.commandSliceSelect.resliceCursorWidgets[i] is not None:
+                self.commandSliceSelect.resliceCursorWidgets[i].Render()
+
         self.render()
                         
     # Update
@@ -152,4 +154,4 @@ class OrthoViewer(VtkViewer):
 
     # Events
     def add_observers(self):
-        self.resliceCursorWidget.AddObserver(vtk.vtkResliceCursorWidget.ResliceAxesChangedEvent, self.commandSliceSelect)
+        self.resliceCursorWidget.AddObserver(vtk.vtkResliceCursorWidget.ResliceAxesChangedEvent, lambda caller, event: self.commandSliceSelect(caller, event))

@@ -16,3 +16,6 @@ pandas>=2.0.0
 
 # Optional but recommended for better performance
 nnunet>=2.0.0
+PyQt5
+vtk
+pyqtdarktheme

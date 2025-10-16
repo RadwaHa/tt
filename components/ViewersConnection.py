@@ -1,7 +1,7 @@
 from vtk import *
-from OrthoViewer import *
-from SegmentationViewer import *
-from CommandSliceSelect import CommandSliceSelect
+from viewers.OrthoViewer import *
+from viewers.SegmentationViewer import *
+from .CommandSliceSelect import CommandSliceSelect
 
 class ViewersConnection():
     
@@ -48,4 +48,3 @@ class ViewersConnection():
     # Add orthogonal viewer
     def add_orthogonal_viewer(self, orthogonal_viewer):
         self.orthogonal_viewers.append(orthogonal_viewer)
-    

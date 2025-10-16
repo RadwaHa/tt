@@ -3,7 +3,7 @@
 import numpy as np
 
 from vtk import *
-from VtkViewer import *
+from .VtkViewer import *
 
 # Segmentation Viewer
 class SegmentationViewer(VtkViewer):

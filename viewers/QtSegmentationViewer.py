@@ -1,11 +1,11 @@
 
-from SegmentationViewer import *
+from .SegmentationViewer import *
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from QtViewer import *
+from .QtViewer import *
 
 class QtSegmentationViewer(QtViewer):
 

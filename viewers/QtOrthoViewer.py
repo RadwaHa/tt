@@ -1,12 +1,11 @@
-
-from OrthoViewer import *
+from .OrthoViewer import *
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from Worker import *
+from utils.Worker import *
 
-from QtViewer import *
+from .QtViewer import *
 
 class QtOrthoViewer(QtViewer):
 

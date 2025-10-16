@@ -1,7 +1,7 @@
 # ignore pylint
 # pylint: disable-msg=E0611,E0602
 import numpy as np
-from VtkBase import VtkBase
+from components.VtkBase import VtkBase
 
 from vtk import *
 import vtk.qt
