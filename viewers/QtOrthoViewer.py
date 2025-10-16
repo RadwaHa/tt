@@ -41,6 +41,7 @@ class QtOrthoViewer(QtViewer):
         self.slider.setSingleStep(1)
         self.slider.setValue(0)
         self.slider.setEnabled(False)
+        self.viewer.commandSliceSelect.sliders[self.orientation] = self.slider
         
         ## Buttons
         self.buttonsLayout = QHBoxLayout()

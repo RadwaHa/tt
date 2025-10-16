@@ -80,6 +80,7 @@ class MainWindow(QtWidgets.QMainWindow):
         open_folder_action = QtWidgets.QAction("Open DICOM", self)
         open_folder_action.setShortcut("Ctrl+f")
         self.toggle_roi_action = QtWidgets.QAction("Toggle ROI", self)
+        self.toggle_roi_action.setCheckable(True)
         self.toggle_roi_action.setShortcut("Ctrl+r")
 
         open_action.triggered.connect(self.open_data)
