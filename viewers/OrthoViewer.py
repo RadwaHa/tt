@@ -137,8 +137,10 @@ class OrthoViewer(VtkViewer):
         
         self.resliceCursor.Update()
         for i in range(0,3):
-            self.commandSliceSelect.imagePlaneWidgets[i].UpdatePlacement()
-            self.commandSliceSelect.resliceCursorWidgets[i].Render()
+            if self.commandSliceSelect.imagePlaneWidgets[i] is not None:
+                self.commandSliceSelect.imagePlaneWidgets[i].UpdatePlacement()
+            if self.commandSliceSelect.resliceCursorWidgets[i] is not None:
+                self.commandSliceSelect.resliceCursorWidgets[i].Render()
 
         self.render()
                         
