@@ -8,6 +8,9 @@ from QtSegmentationViewer import QtSegmentationViewer
 from VtkBase import VtkBase
 from ViewersConnection import ViewersConnection
 
+# NEW: Import organ detection widget
+from QtOrganDetectionWidget import QtOrganDetectionWidget
+
 # Main Window
 class MainWindow(QtWidgets.QMainWindow):
     
@@ -52,7 +55,10 @@ class MainWindow(QtWidgets.QMainWindow):
         central_layout.addWidget(main_splitter)
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)
-                        
+        # NEW: Add organ detection dock widget to the right side
+        self.organ_detection_widget = QtOrganDetectionWidget(self.vtkBaseClass, parent=self)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.organ_detection_widget)
+
         # Add menu bar
         self.create_menu()
 
@@ -75,7 +81,15 @@ class MainWindow(QtWidgets.QMainWindow):
         open_action.triggered.connect(self.open_data)
 
         file_menu.addAction(open_action)
-
+        # ✨ NEW: Add menu option to show/hide organ detection panel
+        view_menu = menu_bar.addMenu("View")
+        toggle_detection_action = QtWidgets.QAction("Toggle Organ Detection Panel", self)
+        toggle_detection_action.setCheckable(True)
+        toggle_detection_action.setChecked(True)
+        toggle_detection_action.triggered.connect(
+            lambda checked: self.organ_detection_widget.setVisible(checked)
+        )
+        view_menu.addAction(toggle_detection_action)
     # Open data
     def open_data(self):
         file_dialog = QFileDialog()
@@ -100,8 +114,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtSagittalOrthoViewer.connect_on_data(filename)
         self.QtSegmentationViewer.connect_on_data(filename)
         self.ViewersConnection.connect_on_data()
-    
-    # Render the data   
+
+        # NEW: Notify organ detection widget that data is loaded
+        self.organ_detection_widget.connect_on_data(filename)
+
+    # Render the data
     def render_data(self):
         self.QtAxialOrthoViewer.render()
         self.QtCoronalOrthoViewer.render()
