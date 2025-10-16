@@ -8,7 +8,7 @@ class ViewersConnection():
     # Constructor
     def __init__(self, vtkBaseClass:VtkBase) -> None:
         # Properties
-        self.commandSliceSelect = CommandSliceSelect()
+        self.commandSliceSelect = vtkBaseClass.commandSliceSelect
         self.orthogonal_viewers = []
         self.segmentation_viewer = None
         self.vtkBaseClass = vtkBaseClass
