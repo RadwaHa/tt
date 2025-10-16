@@ -8,6 +8,7 @@ from viewers.QtSegmentationViewer import QtSegmentationViewer
 from components.VtkBase import VtkBase
 from components.ViewersConnection import ViewersConnection
 from viewers.ROIViewer import ROIViewer
+from utils.orientation_detector import OrientationDetector
 
 # Main Window
 class MainWindow(QtWidgets.QMainWindow):
@@ -29,6 +30,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtAxialOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY, "Axial Plane - XY")
         self.QtExtraViewer = QtSegmentationViewer(self.vtkBaseClass, label="Extra Viewer")
         
+        # Instantiate the orientation detector
+        # NOTE: This is a simulated orientation.
+        # Change this to "Axial", "Coronal", or "Sagittal" to test different views.
+        self.simulated_orientation = "Coronal"
+        self.orientation_detector = OrientationDetector(
+            simulated_orientation=self.simulated_orientation
+        )
+
         self.ViewersConnection = ViewersConnection(self.vtkBaseClass)
         self.ViewersConnection.add_orthogonal_viewer(self.QtSagittalOrthoViewer.get_viewer())
         self.ViewersConnection.add_orthogonal_viewer(self.QtCoronalOrthoViewer.get_viewer())
@@ -53,6 +62,10 @@ class MainWindow(QtWidgets.QMainWindow):
         central_layout.addWidget(main_splitter)
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)
+
+        # Add a status bar
+        self.status_bar = QtWidgets.QStatusBar()
+        self.setStatusBar(self.status_bar)
                         
         # Add menu bar
         self.create_menu()
@@ -129,9 +142,20 @@ class MainWindow(QtWidgets.QMainWindow):
     # Load the data
     def load_data(self, filename):
         self.vtkBaseClass.connect_on_data(filename)
-        self.QtAxialOrthoViewer.connect_on_data(filename)
-        self.QtCoronalOrthoViewer.connect_on_data(filename)
-        self.QtSagittalOrthoViewer.connect_on_data(filename)
+
+        # Predict the orientation
+        image_data = self.vtkBaseClass.imageReader.GetOutput()
+        orientation = self.orientation_detector.predict_orientation(image_data)
+        self.status_bar.showMessage(f"Predicted Orientation: {orientation}")
+
+        # Load the image into the correct viewer
+        if orientation == "Axial":
+            self.QtAxialOrthoViewer.connect_on_data(filename)
+        elif orientation == "Coronal":
+            self.QtCoronalOrthoViewer.connect_on_data(filename)
+        elif orientation == "Sagittal":
+            self.QtSagittalOrthoViewer.connect_on_data(filename)
+
         self.QtExtraViewer.connect_on_data(filename)
         self.ViewersConnection.connect_on_data()
         self.roi_viewer.box_widget.SetInputData(self.vtkBaseClass.imageReader.GetOutput())
