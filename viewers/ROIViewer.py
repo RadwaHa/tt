@@ -26,18 +26,13 @@ class ROIViewer:
 
         for box_widget in self.box_widgets:
             if box_widget != self.current_box_widget:
-                # Get the box widget's planes
-                other_planes = vtk.vtkPlanes()
-                box_widget.GetPlanes(other_planes)
-
-                # Check if the planes are different
-                if other_planes.GetBounds() != planes.GetBounds():
-                    box_widget.PlaceWidget(planes.GetBounds())
+                box_widget.PlaceWidget(planes.GetBounds())
 
     def get_roi_bounds(self):
         if self.current_box_widget:
-            bounds = self.current_box_widget.GetPlanes().GetBounds()
-            return bounds
+            planes = vtk.vtkPlanes()
+            self.current_box_widget.GetPlanes(planes)
+            return planes.GetBounds()
         return None
 
     def set_roi(self):
