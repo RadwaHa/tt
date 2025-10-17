@@ -176,3 +176,10 @@ class OrthoViewer(VtkViewer):
 
         # Set the slice index
         self.set_slice(slice_index)
+
+        # Update the slider
+        if self.commandSliceSelect.sliders[self.orientation] is not None:
+            # Block signals to prevent a feedback loop
+            self.commandSliceSelect.sliders[self.orientation].blockSignals(True)
+            self.commandSliceSelect.sliders[self.orientation].setValue(int(slice_index))
+            self.commandSliceSelect.sliders[self.orientation].blockSignals(False)

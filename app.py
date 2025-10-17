@@ -8,8 +8,6 @@ from viewers.QtSegmentationViewer import QtSegmentationViewer
 from components.VtkBase import VtkBase
 from components.ViewersConnection import ViewersConnection
 from viewers.ROIViewer import ROIViewer
-from utils.orientation_detector import OrientationDetector
-
 # NEW: Import organ detection widget
 from QtOrganDetectionWidget import QtOrganDetectionWidget
 
@@ -32,14 +30,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtCoronalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XZ, "Coronal Plane - XZ")
         self.QtAxialOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY, "Axial Plane - XY")
         self.QtExtraViewer = QtSegmentationViewer(self.vtkBaseClass, label="Extra Viewer")
-        
-        # Instantiate the orientation detector
-        # NOTE: This is a simulated orientation.
-        # Change this to "Axial", "Coronal", or "Sagittal" to test different views.
-        self.simulated_orientation = "Coronal"
-        self.orientation_detector = OrientationDetector(
-            simulated_orientation=self.simulated_orientation
-        )
 
         self.ViewersConnection = ViewersConnection(self.vtkBaseClass)
         self.ViewersConnection.add_orthogonal_viewer(self.QtSagittalOrthoViewer.get_viewer())
@@ -82,7 +72,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.connect()
 
         # ROI Viewer
-        self.roi_viewer = ROIViewer(self.QtExtraViewer.get_interactor(), self.vtkBaseClass)
+        self.roi_viewer = ROIViewer(self, self.vtkBaseClass)
         self.roi_viewer.off()
 
     # Connect signals and slots         
@@ -103,20 +93,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toggle_roi_action = QtWidgets.QAction("Toggle ROI", self)
         self.toggle_roi_action.setCheckable(True)
         self.toggle_roi_action.setShortcut("Ctrl+r")
+        self.set_roi_action = QtWidgets.QAction("Set ROI", self)
+        self.set_roi_action.setShortcut("Ctrl+s")
 
         open_action.triggered.connect(self.open_data)
         open_folder_action.triggered.connect(self.open_folder)
         self.toggle_roi_action.triggered.connect(self.toggle_roi)
+        self.set_roi_action.triggered.connect(self.set_roi)
 
         file_menu.addAction(open_action)
         file_menu.addAction(open_folder_action)
         roi_menu.addAction(self.toggle_roi_action)
+        roi_menu.addAction(self.set_roi_action)
 
     def toggle_roi(self):
         if self.toggle_roi_action.isChecked():
             self.roi_viewer.on()
         else:
             self.roi_viewer.off()
+
+    def set_roi(self):
+        self.roi_viewer.set_roi()
 
         # ✨ NEW: Add menu option to show/hide organ detection panel
         view_menu = menu_bar.addMenu("View")
@@ -160,18 +157,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def load_data(self, filename):
         self.vtkBaseClass.connect_on_data(filename)
 
-        # Predict the orientation
-        image_data = self.vtkBaseClass.imageReader.GetOutput()
-        orientation = self.orientation_detector.predict_orientation(image_data)
-        self.status_bar.showMessage(f"Predicted Orientation: {orientation}")
-
         # Load the image into the correct viewer
-        if orientation == "Axial":
-            self.QtAxialOrthoViewer.connect_on_data(filename)
-        elif orientation == "Coronal":
-            self.QtCoronalOrthoViewer.connect_on_data(filename)
-        elif orientation == "Sagittal":
-            self.QtSagittalOrthoViewer.connect_on_data(filename)
+        self.QtAxialOrthoViewer.connect_on_data(filename)
+        self.QtCoronalOrthoViewer.connect_on_data(filename)
+        self.QtSagittalOrthoViewer.connect_on_data(filename)
 
         self.QtExtraViewer.connect_on_data(filename)
         self.ViewersConnection.connect_on_data()
