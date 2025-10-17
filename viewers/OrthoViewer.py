@@ -158,11 +158,8 @@ class OrthoViewer(VtkViewer):
         self.resliceCursorWidget.AddObserver(vtk.vtkResliceCursorWidget.ResliceAxesChangedEvent, lambda caller, event: self.commandSliceSelect(caller, event))
 
     def update_slice_from_reslice_cursor(self, caller, event):
-        # Get the reslice cursor from the caller
-        reslice_cursor = caller.GetResliceCursor()
-
         # Get the center of the reslice cursor
-        center = reslice_cursor.GetCenter()
+        center = self.resliceCursor.GetCenter()
 
         # Get the image data
         image = self.vtkBaseClass.imageReader.GetOutput()
