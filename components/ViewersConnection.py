@@ -55,6 +55,6 @@ class ViewersConnection():
             for j in range(len(self.orthogonal_viewers)):
                 if i != j:
                     self.orthogonal_viewers[i].resliceCursor.AddObserver(
-                        vtk.vtkResliceCursorWidget.ResliceAxesChangedEvent,
+                        vtk.vtkResliceCursor.ResliceAxesChangedEvent,
                         self.orthogonal_viewers[j].update_slice_from_reslice_cursor
                     )
