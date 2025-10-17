@@ -84,7 +84,6 @@ class QtOrthoViewer(QtViewer):
     # Update slice
     def update_slice(self, slice_index):
         self.viewer.set_slice(slice_index)
-        self.viewer.commandSliceSelect.update_slice(self.orientation, slice_index)
 
     # Connect on data
     def connect_on_data(self, path):

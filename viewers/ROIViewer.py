@@ -56,21 +56,9 @@ class ROIViewer:
             self.main_app.QtExtraViewer.render()
 
     def on(self):
-        if not self.box_widgets:
-            for i in range(3):
-                box_widget = vtk.vtkBoxWidget()
-                box_widget.SetInteractor(self.main_app.ViewersConnection.orthogonal_viewers[i].GetRenderWindow().GetInteractor())
-                box_widget.SetPlaceFactor(1.25)
-                box_widget.SetInputData(self.vtk_base.imageReader.GetOutput())
-                box_widget.PlaceWidget()
-                box_widget.On()
-                box_widget.AddObserver("InteractionEvent", self.update_roi)
-                self.box_widgets.append(box_widget)
-        else:
-            for box_widget in self.box_widgets:
-                box_widget.On()
+        for box_widget in self.box_widgets:
+            box_widget.On()
 
     def off(self):
         for box_widget in self.box_widgets:
             box_widget.Off()
-        self.box_widgets = []

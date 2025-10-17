@@ -31,10 +31,3 @@ class CommandSliceSelect(object):
         for i in range(3):
             slice_val = self.resliceCursor.GetImage().GetBounds()[i * 2 + int(self.resliceCursor.GetImage().GetExtent()[i * 2] == self.resliceCursor.GetImage().GetExtent()[i * 2 + 1])]
             self.sliders[i].setValue(int(slice_val))
-
-    def update_slice(self, orientation, slice_index):
-        if self.resliceCursor is not None:
-            center = list(self.resliceCursor.GetCenter())
-            center[orientation] = slice_index
-            self.resliceCursor.SetCenter(center)
-            self.update_reslice(self.resliceCursorWidgets[(orientation + 1) % 3], self.resliceCursorWidgets[(orientation + 2) % 3])
