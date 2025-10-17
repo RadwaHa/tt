@@ -180,8 +180,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.organ_detection_widget.connect_on_data(filename)
 
     # Render the data
-        self.roi_viewer.box_widget.SetInputData(self.vtkBaseClass.imageReader.GetOutput())
-        self.roi_viewer.box_widget.PlaceWidget()
+        self.roi_viewer.plane_widget.SetInputData(self.vtkBaseClass.imageReader.GetOutput())
+        self.roi_viewer.plane_widget.PlaceWidget()
 
     # Render the data
     def render_data(self):
