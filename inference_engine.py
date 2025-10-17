@@ -10,7 +10,7 @@ import shutil
 from pathlib import Path
 from totalsegmentator.python_api import totalsegmentator
 import SimpleITK as sitk
-from utils import check_device
+from utils.helpers import check_device
 
 # TotalSegmentator organ labels (major organs only)
 ORGAN_LABELS = {

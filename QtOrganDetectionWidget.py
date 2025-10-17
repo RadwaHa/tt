@@ -15,7 +15,7 @@ from pathlib import Path
 import vtk
 
 from inference_engine import SliceOrganDetector
-from utils import check_device, save_results
+from utils.helpers import check_device, save_results
 
 
 class DetectionWorker(QThread):
