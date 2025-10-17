@@ -46,6 +46,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ViewersConnection.add_orthogonal_viewer(self.QtCoronalOrthoViewer.get_viewer())
         self.ViewersConnection.add_orthogonal_viewer(self.QtAxialOrthoViewer.get_viewer())
         self.ViewersConnection.add_segmentation_viewer(self.QtExtraViewer.get_viewer())
+        self.ViewersConnection.connect_orthogonal_viewers()
 
         # Set up the main layout
         main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
