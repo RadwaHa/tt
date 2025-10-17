@@ -50,11 +50,4 @@ class ViewersConnection():
         self.orthogonal_viewers.append(orthogonal_viewer)
 
     def connect_orthogonal_viewers(self):
-        for i in range(len(self.orthogonal_viewers)):
-            # Add observers to the reslice cursor to update the other viewers
-            for j in range(len(self.orthogonal_viewers)):
-                if i != j:
-                    self.orthogonal_viewers[i].resliceCursorWidget.AddObserver(
-                        vtk.vtkResliceCursorWidget.ResliceAxesChangedEvent,
-                        self.orthogonal_viewers[j].update_slice_from_reslice_cursor
-                    )
+        pass

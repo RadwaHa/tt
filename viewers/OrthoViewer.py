@@ -156,27 +156,3 @@ class OrthoViewer(VtkViewer):
     # Events
     def add_observers(self):
         self.resliceCursorWidget.AddObserver(vtk.vtkResliceCursorWidget.ResliceAxesChangedEvent, lambda caller, event: self.commandSliceSelect(caller, event))
-
-    def update_slice_from_reslice_cursor(self, caller, event):
-        # Get the center of the reslice cursor
-        center = self.resliceCursor.GetCenter()
-
-        # Get the image data
-        image = self.vtkBaseClass.imageReader.GetOutput()
-
-        # Get the spacing and origin of the image
-        spacing = image.GetSpacing()
-        origin = image.GetOrigin()
-
-        # Calculate the slice index
-        slice_index = (center[self.orientation] - origin[self.orientation]) / spacing[self.orientation]
-
-        # Set the slice index
-        self.set_slice(slice_index)
-
-        # Update the slider
-        if self.commandSliceSelect.sliders[self.orientation] is not None:
-            # Block signals to prevent a feedback loop
-            self.commandSliceSelect.sliders[self.orientation].blockSignals(True)
-            self.commandSliceSelect.sliders[self.orientation].setValue(int(slice_index))
-            self.commandSliceSelect.sliders[self.orientation].blockSignals(False)
