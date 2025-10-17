@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QFileDialog
 
 # VTK
 from viewers.QtOrthoViewer import *
-from viewers.QtSegmentationViewer import QtSegmentationViewer
+from viewers.QtFourthViewer import QtFourthViewer
 from components.VtkBase import VtkBase
 from components.ViewersConnection import ViewersConnection
 from viewers.ROIViewer import ROIViewer
@@ -29,13 +29,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtSagittalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_YZ, "Sagittal Plane - YZ")
         self.QtCoronalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XZ, "Coronal Plane - XZ")
         self.QtAxialOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY, "Axial Plane - XY")
-        self.QtExtraViewer = QtSegmentationViewer(self.vtkBaseClass, label="Extra Viewer")
+        self.QtExtraViewer = QtFourthViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY, label="Extra Viewer")
 
         self.ViewersConnection = ViewersConnection(self.vtkBaseClass)
         self.ViewersConnection.add_orthogonal_viewer(self.QtSagittalOrthoViewer.get_viewer())
         self.ViewersConnection.add_orthogonal_viewer(self.QtCoronalOrthoViewer.get_viewer())
         self.ViewersConnection.add_orthogonal_viewer(self.QtAxialOrthoViewer.get_viewer())
-        self.ViewersConnection.add_segmentation_viewer(self.QtExtraViewer.get_viewer())
+        self.ViewersConnection.add_orthogonal_viewer(self.QtExtraViewer.get_viewer())
         self.ViewersConnection.connect_orthogonal_viewers()
 
         # Set up the main layout
@@ -70,6 +70,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Connect signals and slots
         self.connect()
+
+        # Connect the slice changed signal to the organ detection widget
+        self.QtAxialOrthoViewer.slice_changed.connect(self.organ_detection_widget.on_slice_changed)
+        self.QtCoronalOrthoViewer.slice_changed.connect(self.organ_detection_widget.on_slice_changed)
+        self.QtSagittalOrthoViewer.slice_changed.connect(self.organ_detection_widget.on_slice_changed)
 
         # ROI Viewer
         self.roi_viewer = ROIViewer(self, self.vtkBaseClass)

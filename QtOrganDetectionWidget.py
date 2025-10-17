@@ -201,6 +201,7 @@ class QtOrganDetectionWidget(QtWidgets.QDockWidget):
 
         layout.addLayout(overlay_layout)
 
+
         group.setLayout(layout)
         parent_layout.addWidget(group)
 
@@ -367,6 +368,12 @@ class QtOrganDetectionWidget(QtWidgets.QDockWidget):
             self.display_results_for_slice(slice_idx)
             if self.show_overlay_checkbox.isChecked():
                 self.update_overlay_on_viewers()
+
+        if self.parent().QtExtraViewer.mode_selector.currentText() == "Outline Mode":
+            if self.results and self.current_slice_idx < len(self.results):
+                self.parent().QtExtraViewer.viewer.show_outline(self.results[self.current_slice_idx])
+            else:
+                self.parent().QtExtraViewer.viewer.hide_outline()
 
     def display_results_for_slice(self, slice_idx):
         """Display detection results for a specific slice."""

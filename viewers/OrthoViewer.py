@@ -2,6 +2,11 @@
 from vtk import *
 from .VtkViewer import *
 from components.CommandSliceSelect import *
+from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from vtkmodules.vtkImagingCore import vtkImageActor
+from vtkmodules.vtkFiltersCore import vtkMarchingCubes
+from vtkmodules.vtkCommonDataModel import vtkPolyData
+from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
 class OrthoViewer(VtkViewer):
 
@@ -87,6 +92,12 @@ class OrthoViewer(VtkViewer):
                             
         # Add observers
         self.add_observers()
+
+        # Outline actor
+        self.outline_actor = None
+
+        # Oblique actor
+        self.oblique_actor = None
     
     # Connect on data
     def connect_on_data(self, path:str):
@@ -180,3 +191,65 @@ class OrthoViewer(VtkViewer):
             self.commandSliceSelect.sliders[self.orientation].blockSignals(True)
             self.commandSliceSelect.sliders[self.orientation].setValue(int(slice_index))
             self.commandSliceSelect.sliders[self.orientation].blockSignals(False)
+
+    def show_outline(self, result):
+        if not result or not result['masks']:
+            return
+
+        mask = list(result['masks'].values())[0]  # Get the first mask
+
+        # Create a VTK image data from the mask
+        vtk_image = vtk.vtkImageData()
+        vtk_image.SetDimensions(mask.shape[1], mask.shape[0], 1)
+        vtk_image.AllocateScalars(vtk.VTK_UNSIGNED_CHAR, 1)
+
+        # Fill the VTK image data
+        for y in range(mask.shape[0]):
+            for x in range(mask.shape[1]):
+                vtk_image.SetScalarComponentFromDouble(x, y, 0, 0, mask[y, x])
+
+        # Create a marching squares object to extract the outline
+        marching_squares = vtk.vtkMarchingSquares()
+        marching_squares.SetInputData(vtk_image)
+        marching_squares.SetValue(0, 0.5)
+        marching_squares.Update()
+
+        # Create a mapper and actor for the outline
+        mapper = vtkPolyDataMapper()
+        mapper.SetInputConnection(marching_squares.GetOutputPort())
+
+        if self.outline_actor:
+            self.renderer.RemoveActor(self.outline_actor)
+
+        self.outline_actor = vtkActor()
+        self.outline_actor.SetMapper(mapper)
+        self.outline_actor.GetProperty().SetColor(1, 0, 0)  # Red color for the outline
+        self.renderer.AddActor(self.outline_actor)
+        self.render()
+
+    def hide_outline(self):
+        if self.outline_actor:
+            self.renderer.RemoveActor(self.outline_actor)
+            self.outline_actor = None
+            self.render()
+
+    def show_oblique(self):
+        # Create an image plane widget
+        self.oblique_actor = vtk.vtkImagePlaneWidget()
+        self.oblique_actor.SetInputConnection(self.vtkBaseClass.imageReader.GetOutputPort())
+        self.oblique_actor.SetInteractor(self.renderWindowInteractor)
+        self.oblique_actor.SetResliceCursor(self.vtkBaseClass.resliceCursor)
+        self.oblique_actor.PlaceWidget()
+        self.oblique_actor.On()
+        self.oblique_actor.InteractionOn()
+        self.resliceCursorWidget.AddObserver(vtk.vtkResliceCursorWidget.ResliceAxesChangedEvent, self.update_oblique_plane)
+
+    def update_oblique_plane(self, widget, event):
+        if self.oblique_actor:
+            self.oblique_actor.UpdatePlacement()
+
+    def hide_oblique(self):
+        if self.oblique_actor:
+            self.oblique_actor.Off()
+            self.oblique_actor = None
+            self.render()
