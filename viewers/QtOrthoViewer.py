@@ -7,8 +7,11 @@ from utils.Worker import Worker
 
 from .QtViewer import *
 
+from PyQt5.QtCore import pyqtSignal
+
 class QtOrthoViewer(QtViewer):
     slice_changed = pyqtSignal(int)
+
     # Constructor
     def __init__(self, vtkBaseClass, orientation, label:str="Orthogonal Viewer"):
         super(QtOrthoViewer, self).__init__()

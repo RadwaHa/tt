@@ -44,11 +44,14 @@ class DetectionWorker(QThread):
             self.error.emit(str(e))
 
 
+from PyQt5.QtCore import pyqtSignal
+
 class QtOrganDetectionWidget(QtWidgets.QDockWidget):
     """
     Dock widget for organ detection that integrates with MPR viewer.
     Provides controls for running TotalSegmentator and visualizing results.
     """
+    detection_completed = pyqtSignal(list)
 
     def __init__(self, vtkBaseClass, parent=None):
         super().__init__("🔬 Organ Detection (TotalSegmentator)", parent)
@@ -201,7 +204,6 @@ class QtOrganDetectionWidget(QtWidgets.QDockWidget):
 
         layout.addLayout(overlay_layout)
 
-
         group.setLayout(layout)
         parent_layout.addWidget(group)
 
@@ -346,6 +348,9 @@ class QtOrganDetectionWidget(QtWidgets.QDockWidget):
             # Display results for current slice
             self.display_results_for_slice(self.current_slice_idx)
 
+            # Emit the detection completed signal
+            self.detection_completed.emit(self.results)
+
             # Add overlays to viewers if enabled
             if self.show_overlay_checkbox.isChecked():
                 self.update_overlay_on_viewers()
@@ -368,12 +373,6 @@ class QtOrganDetectionWidget(QtWidgets.QDockWidget):
             self.display_results_for_slice(slice_idx)
             if self.show_overlay_checkbox.isChecked():
                 self.update_overlay_on_viewers()
-
-        if self.parent().QtExtraViewer.mode_selector.currentText() == "Outline Mode":
-            if self.results and self.current_slice_idx < len(self.results):
-                self.parent().QtExtraViewer.viewer.show_outline(self.results[self.current_slice_idx])
-            else:
-                self.parent().QtExtraViewer.viewer.hide_outline()
 
     def display_results_for_slice(self, slice_idx):
         """Display detection results for a specific slice."""
