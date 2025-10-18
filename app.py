@@ -6,8 +6,9 @@ from PyQt5.QtWidgets import QFileDialog
 from viewers.QtOrthoViewer import QtOrthoViewer
 from viewers.QtFourthViewer import QtFourthViewer
 from viewers.ROIViewer import ROIViewer
-# NEW: Import organ detection widget
-from QtOrganDetectionWidget import QtOrganDetectionWidget
+from viewers.ReferenceLineManager import ReferenceLineManager
+from components.VtkBase import VtkBase
+from components.ViewersConnection import ViewersConnection
 
 # Main Window
 class MainWindow(QtWidgets.QMainWindow):
@@ -15,27 +16,31 @@ class MainWindow(QtWidgets.QMainWindow):
     # Constructor
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("MPR Viewer")
+        self.setWindowTitle("MPR Viewer with Outline and Oblique Modes")
         self.setWindowIcon(QtGui.QIcon("icon.ico"))
+        
+        # Initialize VTK base class
+        self.vtkBaseClass = VtkBase()
         
         # Create a central widget and set the layout
         central_widget = QtWidgets.QWidget()
         central_layout = QtWidgets.QHBoxLayout()
         
         # Create the viewers
-        self.QtSagittalOrthoViewer = QtOrthoViewer(orientation=1, label="Sagittal Plane - YZ")
-        self.QtCoronalOrthoViewer = QtOrthoViewer(orientation=2, label="Coronal Plane - XZ")
-        self.QtAxialOrthoViewer = QtOrthoViewer(orientation=3, label="Axial Plane - XY")
-        self.QtExtraViewer = QtFourthViewer(label="Extra Viewer")
-
-        # Connect the viewers
-        for i in range(3):
-            self.QtSagittalOrthoViewer.viewer.GetResliceCursorWidget().AddObserver(
-                "ResliceAxesChangedEvent", self.QtExtraViewer.update_oblique)
-            self.QtCoronalOrthoViewer.viewer.GetResliceCursorWidget().AddObserver(
-                "ResliceAxesChangedEvent", self.QtExtraViewer.update_oblique)
-            self.QtAxialOrthoViewer.viewer.GetResliceCursorWidget().AddObserver(
-                "ResliceAxesChangedEvent", self.QtExtraViewer.update_oblique)
+        self.QtAxialOrthoViewer = QtOrthoViewer(orientation=0, label="Axial Plane - XY")
+        self.QtCoronalOrthoViewer = QtOrthoViewer(orientation=1, label="Coronal Plane - XZ")
+        self.QtSagittalOrthoViewer = QtOrthoViewer(orientation=2, label="Sagittal Plane - YZ")
+        self.QtExtraViewer = QtFourthViewer(label="Fourth Viewer - Outline/Oblique")
+        
+        # Initialize ViewersConnection
+        self.ViewersConnection = ViewersConnection([
+            self.QtAxialOrthoViewer,
+            self.QtCoronalOrthoViewer,
+            self.QtSagittalOrthoViewer
+        ])
+        
+        # Create reference line manager for oblique mode
+        self.ref_line_manager = ReferenceLineManager(self.QtExtraViewer)
 
         # Set up the main layout
         main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
@@ -60,146 +65,44 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status_bar = QtWidgets.QStatusBar()
         self.setStatusBar(self.status_bar)
 
-        # NEW: Add organ detection dock widget to the right side
-        self.organ_detection_widget = QtOrganDetectionWidget(self.vtkBaseClass, parent=self)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.organ_detection_widget)
-
         # Add menu bar
         self.create_menu()
 
         # Connect signals and slots
         self.connect()
 
-        # Enable the reslice cursor widget for the orthogonal viewers
-        self.QtAxialOrthoViewer.viewer.enable_reslice_cursor()
-        self.QtCoronalOrthoViewer.viewer.enable_reslice_cursor()
-        self.QtSagittalOrthoViewer.viewer.enable_reslice_cursor()
-
-        # Add observers for oblique plane updates
-        self.QtAxialOrthoViewer.viewer.resliceCursorWidget.AddObserver(
-            "ResliceAxesChangedEvent", self.oblique_update)
-        self.QtCoronalOrthoViewer.viewer.resliceCursorWidget.AddObserver(
-            "ResliceAxesChangedEvent", self.oblique_update)
-        self.QtSagittalOrthoViewer.viewer.resliceCursorWidget.AddObserver(
-            "ResliceAxesChangedEvent", self.oblique_update)
-
         # ROI Viewer
         self.roi_viewer = ROIViewer(self, self.vtkBaseClass)
         self.roi_viewer.off()
+        
+        # Connect mouse events for reference line interaction
+        self._setup_reference_line_interactions()
 
-    def oblique_update(self, caller, event):
-        self.QtExtraViewer.update_oblique()
-
-    # Connect signals and slots         
-    def connect(self):
-        self.QtAxialOrthoViewer.slice_changed.connect(self.QtExtraViewer.update_slice_outline)
-        self.QtCoronalOrthoViewer.slice_changed.connect(self.QtExtraViewer.update_slice_outline)
-        self.QtSagittalOrthoViewer.slice_changed.connect(self.QtExtraViewer.update_slice_outline)
-    
-    # Create the menu bar
-    def create_menu(self):
-        menu_bar = self.menuBar()
-
-        file_menu = menu_bar.addMenu("File")
-        roi_menu = menu_bar.addMenu("ROI")
-
-        open_action = QtWidgets.QAction("Open Image", self)
-        open_action.setShortcut("Ctrl+o")
-        open_folder_action = QtWidgets.QAction("Open DICOM", self)
-        open_folder_action.setShortcut("Ctrl+f")
-        self.toggle_roi_action = QtWidgets.QAction("Toggle ROI", self)
-        self.toggle_roi_action.setCheckable(True)
-        self.toggle_roi_action.setShortcut("Ctrl+r")
-        self.set_roi_action = QtWidgets.QAction("Set ROI", self)
-        self.set_roi_action.setShortcut("Ctrl+s")
-
-        open_action.triggered.connect(self.open_data)
-        open_folder_action.triggered.connect(self.open_folder)
-        self.toggle_roi_action.triggered.connect(self.toggle_roi)
-        self.set_roi_action.triggered.connect(self.set_roi)
-
-        file_menu.addAction(open_action)
-        file_menu.addAction(open_folder_action)
-        roi_menu.addAction(self.toggle_roi_action)
-        roi_menu.addAction(self.set_roi_action)
-
-    def toggle_roi(self):
-        if self.toggle_roi_action.isChecked():
-            self.roi_viewer.on()
-        else:
-            self.roi_viewer.off()
-
-    def set_roi(self):
-        self.roi_viewer.set_roi()
-
-        # ✨ NEW: Add menu option to show/hide organ detection panel
-        view_menu = menu_bar.addMenu("View")
-        toggle_detection_action = QtWidgets.QAction("Toggle Organ Detection Panel", self)
-        toggle_detection_action.setCheckable(True)
-        toggle_detection_action.setChecked(True)
-        toggle_detection_action.triggered.connect(
-            lambda checked: self.organ_detection_widget.setVisible(checked)
-        )
-        view_menu.addAction(toggle_detection_action)
-    # Open data
-    def open_data(self):
-        file_dialog = QFileDialog()
-        file_dialog.setFileMode(QFileDialog.ExistingFile)
-        file_dialog.setNameFilter("Image Files (*.nii *.nii.gz *.mhd)")
-        if file_dialog.exec_():
-            filenames = file_dialog.selectedFiles()
-            if len(filenames) > 0:
-                filename = filenames[0]
-                try:
-                    self.load_data(filename)
-                    self.render_data()
-                except Exception as e:
-                    print(e)
-                    QtWidgets.QMessageBox.critical(self, "Error", "Unable to open the image file.")
-
-    def open_folder(self):
-        folder_dialog = QFileDialog()
-        folder_dialog.setFileMode(QFileDialog.Directory)
-        folder_dialog.setOption(QFileDialog.ShowDirsOnly, True)
-        if folder_dialog.exec_():
-            folder_path = folder_dialog.selectedFiles()[0]
-            try:
-                self.load_data(folder_path)
-                self.render_data()
-            except Exception as e:
-                print(e)
-                QtWidgets.QMessageBox.critical(self, "Error", "Unable to open the folder.")
-
-    # Load the data
-    def load_data(self, filename):
-        self.vtkBaseClass.connect_on_data(filename)
-
-        # Load the image into the correct viewer
-        self.QtAxialOrthoViewer.connect_on_data(filename)
-        self.QtCoronalOrthoViewer.connect_on_data(filename)
-        self.QtSagittalOrthoViewer.connect_on_data(filename)
-
-        self.QtExtraViewer.connect_on_data(filename)
-        self.ViewersConnection.connect_on_data()
-
-        # NEW: Notify organ detection widget that data is loaded
-        self.organ_detection_widget.connect_on_data(filename)
-
-    # Render the data
-    def render_data(self):
-        self.QtAxialOrthoViewer.render()
-        self.QtCoronalOrthoViewer.render()
-        self.QtSagittalOrthoViewer.render()
-        self.QtExtraViewer.render()
-
-    # Close the application
-    def closeEvent(self, QCloseEvent):
-        super().closeEvent(QCloseEvent)
-        self.QtAxialOrthoViewer.close()
-        self.QtCoronalOrthoViewer.close()
-        self.QtSagittalOrthoViewer.close()
-        self.QtExtraViewer.close()
-    
-    # Exit the application  
-    def exit(self):
-        self.close()
+    def _setup_reference_line_interactions(self):
+        """Setup mouse event handlers for reference line manipulation"""
+        # Connect to axial viewer
+        axial_canvas = self.QtAxialOrthoViewer
+        axial_canvas.mpl_connect('button_press_event', 
+            lambda event: self.ref_line_manager.handle_mouse_press(event, 'axial'))
+        axial_canvas.mpl_connect('motion_notify_event', 
+            lambda event: self.ref_line_manager.handle_mouse_motion(event, 'axial', axial_canvas))
+        axial_canvas.mpl_connect('button_release_event', 
+            lambda event: self.ref_line_manager.handle_mouse_release(event, 'axial'))
+        
+        # Connect to coronal viewer
+        coronal_canvas = self.QtCoronalOrthoViewer
+        coronal_canvas.mpl_connect('button_press_event', 
+            lambda event: self.ref_line_manager.handle_mouse_press(event, 'coronal'))
+        coronal_canvas.mpl_connect('motion_notify_event', 
+            lambda event: self.ref_line_manager.handle_mouse_motion(event, 'coronal', coronal_canvas))
+        coronal_canvas.mpl_connect('button_release_event', 
+            lambda event: self.ref_line_manager.handle_mouse_release(event, 'coronal'))
+        
+        # Connect to sagittal viewer
+        sagittal_canvas = self.QtSagittalOrthoViewer
+        sagittal_canvas.mpl_connect('button_press_event', 
+            lambda event: self.ref_line_manager.handle_mouse_press(event, 'sagittal'))
+        sagittal_canvas.mpl_connect('motion_notify_event', 
+            lambda event: self.ref_line_manager.handle_mouse_motion(event, 'sagittal', sagittal_canvas))
+        sagittal_canvas.mpl_connect('button_release_event', 
+            lambda event: self.ref_line_manager.handle_mouse_release(event, 'sagittal'))
