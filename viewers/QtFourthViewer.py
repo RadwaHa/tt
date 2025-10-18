@@ -5,7 +5,6 @@ from PyQt5.QtCore import pyqtSignal
 
 class QtFourthViewer(QtOrthoViewer):
     slice_changed = pyqtSignal(int)
-    oblique_plane_changed = pyqtSignal()
 
     def __init__(self, vtkBaseClass, orientation, label: str = "Fourth Viewer"):
         super().__init__(vtkBaseClass, orientation, label)

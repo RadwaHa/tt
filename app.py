@@ -71,11 +71,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # Connect signals and slots
         self.connect()
 
-        # Set the fourth viewer for oblique plane updates
-        self.QtAxialOrthoViewer.viewer.set_qt_fourth_viewer(self.QtExtraViewer)
-        self.QtCoronalOrthoViewer.viewer.set_qt_fourth_viewer(self.QtExtraViewer)
-        self.QtSagittalOrthoViewer.viewer.set_qt_fourth_viewer(self.QtExtraViewer)
-
         # Enable the reslice cursor widget for the orthogonal viewers
         self.QtAxialOrthoViewer.viewer.enable_reslice_cursor()
         self.QtCoronalOrthoViewer.viewer.enable_reslice_cursor()
