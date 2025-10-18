@@ -1,28 +1,26 @@
-from .OrthoViewer import *
-
+from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from vtk import vtkResliceImageViewer
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from utils.Worker import Worker
 
-from .QtViewer import *
-
 from PyQt5.QtCore import pyqtSignal
 
-class QtOrthoViewer(QtViewer):
+class QtOrthoViewer(QVTKRenderWindowInteractor):
     slice_changed = pyqtSignal(int)
 
     # Constructor
-    def __init__(self, vtkBaseClass, orientation, label:str="Orthogonal Viewer"):
-        super(QtOrthoViewer, self).__init__()
+    def __init__(self, parent=None, orientation=0, label="Orthogonal Viewer"):
+        super(QtOrthoViewer, self).__init__(parent)
+        self.viewer = vtkResliceImageViewer()
+        self.viewer.SetupInteractor(self)
+        self.viewer.SetRenderWindow(self.GetRenderWindow())
 
         # Properties
         self.orientation = orientation
         self.status = False
         self.label = label
-        
-        ## Render Viewer
-        self.viewer = OrthoViewer(vtkBaseClass, self.orientation, self.label)
 
         # Initialize the UI        
         self._init_UI()

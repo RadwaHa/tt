@@ -3,10 +3,8 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QFileDialog
 
 # VTK
-from viewers.QtOrthoViewer import *
+from viewers.QtOrthoViewer import QtOrthoViewer
 from viewers.QtFourthViewer import QtFourthViewer
-from components.VtkBase import VtkBase
-from components.ViewersConnection import ViewersConnection
 from viewers.ROIViewer import ROIViewer
 # NEW: Import organ detection widget
 from QtOrganDetectionWidget import QtOrganDetectionWidget
@@ -25,18 +23,19 @@ class MainWindow(QtWidgets.QMainWindow):
         central_layout = QtWidgets.QHBoxLayout()
         
         # Create the viewers
-        self.vtkBaseClass = VtkBase()
-        self.QtSagittalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_YZ, "Sagittal Plane - YZ")
-        self.QtCoronalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XZ, "Coronal Plane - XZ")
-        self.QtAxialOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY, "Axial Plane - XY")
-        self.QtExtraViewer = QtFourthViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY, label="Extra Viewer")
+        self.QtSagittalOrthoViewer = QtOrthoViewer(orientation=1, label="Sagittal Plane - YZ")
+        self.QtCoronalOrthoViewer = QtOrthoViewer(orientation=2, label="Coronal Plane - XZ")
+        self.QtAxialOrthoViewer = QtOrthoViewer(orientation=3, label="Axial Plane - XY")
+        self.QtExtraViewer = QtFourthViewer(label="Extra Viewer")
 
-        self.ViewersConnection = ViewersConnection(self.vtkBaseClass)
-        self.ViewersConnection.add_orthogonal_viewer(self.QtSagittalOrthoViewer.get_viewer())
-        self.ViewersConnection.add_orthogonal_viewer(self.QtCoronalOrthoViewer.get_viewer())
-        self.ViewersConnection.add_orthogonal_viewer(self.QtAxialOrthoViewer.get_viewer())
-        self.ViewersConnection.add_orthogonal_viewer(self.QtExtraViewer.get_viewer())
-        self.ViewersConnection.connect_orthogonal_viewers()
+        # Connect the viewers
+        for i in range(3):
+            self.QtSagittalOrthoViewer.viewer.GetResliceCursorWidget().AddObserver(
+                "ResliceAxesChangedEvent", self.QtExtraViewer.update_oblique)
+            self.QtCoronalOrthoViewer.viewer.GetResliceCursorWidget().AddObserver(
+                "ResliceAxesChangedEvent", self.QtExtraViewer.update_oblique)
+            self.QtAxialOrthoViewer.viewer.GetResliceCursorWidget().AddObserver(
+                "ResliceAxesChangedEvent", self.QtExtraViewer.update_oblique)
 
         # Set up the main layout
         main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
