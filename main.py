@@ -4,7 +4,7 @@ import sys
 import vtk
 from PyQt5.QtWidgets import QApplication 
 from app import MainWindow
-from qdarktheme import load_stylesheet
+from qdarkstyle import load_stylesheet
 
 def main():
     """Main function for the application."""
