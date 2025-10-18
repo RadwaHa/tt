@@ -20,7 +20,7 @@ class FourthViewer(OrthoViewer):
             self.renderer.RemoveActor(self.outline_actor)
             self.outline_actor = None
 
-        image_data = self.vtk_base_class.imageReader.GetOutput()
+        image_data = self.vtkBaseClass.imageReader.GetOutput()
         if not image_data or image_data.GetDimensions() == (0, 0, 0) or slice_index is None:
             self.render()
             return
