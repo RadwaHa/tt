@@ -34,7 +34,6 @@ class QtOrthoViewer(QVTKRenderWindowInteractor):
 
     # Initialize the UI
     def _init_UI(self):
-        super()._init_UI()
         
         # PyQt Stuff
         ## Slider
