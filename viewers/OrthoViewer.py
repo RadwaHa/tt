@@ -48,24 +48,9 @@ class OrthoViewer(VtkViewer):
                                
         ## Reslice Cursor
         self.resliceCursor = self.vtkBaseClass.resliceCursor
-        
-        # Reslice Cursor Widget
-        self.resliceCursorWidget = vtk.vtkResliceCursorWidget()
-        self.resliceCursorWidget.SetInteractor(self.renderWindowInteractor)
 
-        # Reslice Cursor Line Representation
-        self.resliceCursorRep = vtk.vtkResliceCursorLineRepresentation()
-        self.resliceCursorWidget.SetRepresentation(self.resliceCursorRep)
-        self.resliceCursorRep.GetResliceCursorActor().GetCursorAlgorithm().SetResliceCursor(self.resliceCursor)
-        self.resliceCursorRep.GetResliceCursorActor().GetCursorAlgorithm().SetReslicePlaneNormal(self.orientation)
-        self.resliceCursorRep.SetWindowLevel(self.imageWindowLevel.GetWindow(),self.imageWindowLevel.GetLevel())
-        
-        ## To fix problem of not showing the reslice cursor        
-        for i in range(3):
-            self.resliceCursorRep.GetResliceCursorActor().GetCenterlineProperty(i).SetRepresentationToWireframe()
-        
-        self.resliceCursorWidget.SetDefaultRenderer(self.renderer)
-        self.resliceCursorWidget.EnabledOn()
+        # Set up the reslice cursor widget
+        self.setup_reslice_cursor_widget()
 
         # Command Slice Select
         self.commandSliceSelect = self.vtkBaseClass.commandSliceSelect
@@ -87,6 +72,25 @@ class OrthoViewer(VtkViewer):
                             
         # Add observers
         self.add_observers()
+
+    def setup_reslice_cursor_widget(self):
+        # Reslice Cursor Widget
+        self.resliceCursorWidget = vtk.vtkResliceCursorWidget()
+        self.resliceCursorWidget.SetInteractor(self.renderWindowInteractor)
+
+        # Reslice Cursor Line Representation
+        self.resliceCursorRep = vtk.vtkResliceCursorLineRepresentation()
+        self.resliceCursorWidget.SetRepresentation(self.resliceCursorRep)
+        self.resliceCursorRep.GetResliceCursorActor().GetCursorAlgorithm().SetResliceCursor(self.resliceCursor)
+        self.resliceCursorRep.GetResliceCursorActor().GetCursorAlgorithm().SetReslicePlaneNormal(self.orientation)
+        self.resliceCursorRep.SetWindowLevel(self.imageWindowLevel.GetWindow(),self.imageWindowLevel.GetLevel())
+
+        ## To fix problem of not showing the reslice cursor
+        for i in range(3):
+            self.resliceCursorRep.GetResliceCursorActor().GetCenterlineProperty(i).SetRepresentationToWireframe()
+
+        self.resliceCursorWidget.SetDefaultRenderer(self.renderer)
+        self.resliceCursorWidget.EnabledOn()
     
     # Connect on data
     def connect_on_data(self, path:str):

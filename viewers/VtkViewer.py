@@ -45,17 +45,29 @@ class VtkViewer(QVTKRenderWindowInteractor):
                 
         ## Interactor
         self.renderWindowInteractor = self.renderWindow.GetInteractor()
-        
+
+        ## Reslice Cursor Widget
+        self.resliceCursorWidget = vtkResliceCursorWidget()
+        self.resliceCursorRep = vtkResliceCursorLineRepresentation()
+        self.resliceCursorWidget.SetInteractor(self.renderWindowInteractor)
+        self.resliceCursorWidget.SetRepresentation(self.resliceCursorRep)
+        self.resliceCursorRep.GetResliceCursorActor().GetCursorAlgorithm().SetResliceCursor(self.vtkBaseClass.resliceCursor)
+
         ## Label Text Actor
-        self.labelTextActor = vtkTextActor() 
+        self.labelTextActor = vtkTextActor()
         s = f"{self.label}"
         self.labelTextActor.SetInput(s)
         self.labelTextActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
         self.labelTextActor.GetPositionCoordinate().SetValue(0.7, 0.87)
         self.renderer.AddActor2D(self.labelTextActor)
 
-        # Render 
+        self.qt_fourth_viewer = None
+
+        # Render
         self.render()
+
+    def enable_reslice_cursor(self):
+        self.resliceCursorWidget.On()
 
     # Destructor
     def closeEvent(self, QCloseEvent):

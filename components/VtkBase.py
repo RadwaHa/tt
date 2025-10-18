@@ -126,3 +126,6 @@ class VtkBase():
         
         # Calculate the bounds of the data
         self.bounds = self.imageReader.GetOutput().GetBounds()
+
+    def get_reslice_axes(self):
+        return self.resliceCursor.GetResliceAxes()

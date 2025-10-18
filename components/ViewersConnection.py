@@ -36,7 +36,9 @@ class ViewersConnection():
             # Add observers to the reslice cursor to update the other viewers
             for j in range(len(self.orthogonal_viewers)):
                 if i != j:
-                    self.orthogonal_viewers[i].resliceCursorWidget.AddObserver(
-                        vtk.vtkResliceCursorWidget.ResliceAxesChangedEvent,
-                        self.orthogonal_viewers[j].update_slice_from_reslice_cursor
-                    )
+                    # Make sure the reslice cursor widget exists before adding an observer
+                    if hasattr(self.orthogonal_viewers[i], 'resliceCursorWidget') and self.orthogonal_viewers[i].resliceCursorWidget:
+                        self.orthogonal_viewers[i].resliceCursorWidget.AddObserver(
+                            vtk.vtkResliceCursorWidget.ResliceAxesChangedEvent,
+                            self.orthogonal_viewers[j].update_slice_from_reslice_cursor
+                        )

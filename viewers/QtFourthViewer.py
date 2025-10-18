@@ -5,6 +5,7 @@ from PyQt5.QtCore import pyqtSignal
 
 class QtFourthViewer(QtOrthoViewer):
     slice_changed = pyqtSignal(int)
+    oblique_plane_changed = pyqtSignal()
 
     def __init__(self, vtkBaseClass, orientation, label: str = "Fourth Viewer"):
         super().__init__(vtkBaseClass, orientation, label)
@@ -16,7 +17,7 @@ class QtFourthViewer(QtOrthoViewer):
     def _init_UI(self):
         super()._init_UI()
         self.mode_selector = QComboBox()
-        self.mode_selector.addItems(["Normal", "Outline Mode", "Oblique Plane Mode"])
+        self.mode_selector.addItems(["Outline Mode", "Oblique Plane Mode"])
         self.mainLayout.addWidget(self.mode_selector)
 
     def connect(self):
@@ -25,21 +26,23 @@ class QtFourthViewer(QtOrthoViewer):
         self.slider.valueChanged.connect(self.slice_changed.emit)
 
     def update_mode(self, index):
-        if index == 0: # Normal
-            pass
-        elif index == 1: # Outline Mode
-            pass
-        elif index == 2: # Oblique Plane Mode
-            pass
+        if index == 0: # Outline Mode
+            self.viewer.slice_actor.VisibilityOff()
+            self.update_slice_outline(self.viewer.get_slice())
+        elif index == 1: # Oblique Plane Mode
+            self.viewer.show_oblique_plane()
 
     def set_detection_results(self, results):
         self.detection_results = results
-        if self.mode_selector.currentIndex() == 1:
+        if self.mode_selector.currentIndex() == 0:
             self.update_slice_outline(self.viewer.get_slice())
 
     def update_slice_outline(self, slice_index):
+        if self.mode_selector.currentIndex() == 0:
+            self.viewer.show_outline(slice_index)
+        else:
+            self.viewer.show_outline(None)
+
+    def update_oblique(self):
         if self.mode_selector.currentIndex() == 1:
-            if self.detection_results and slice_index < len(self.detection_results):
-                self.viewer.show_outline(self.detection_results[slice_index])
-            else:
-                self.viewer.show_outline(None)
+            self.viewer.show_oblique_plane()

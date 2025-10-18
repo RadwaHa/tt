@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QFileDialog
 
 # VTK
 from viewers.QtOrthoViewer import *
+from viewers.QtFourthViewer import QtFourthViewer
 from components.VtkBase import VtkBase
 from components.ViewersConnection import ViewersConnection
 from viewers.ROIViewer import ROIViewer
@@ -28,7 +29,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtSagittalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_YZ, "Sagittal Plane - YZ")
         self.QtCoronalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XZ, "Coronal Plane - XZ")
         self.QtAxialOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY, "Axial Plane - XY")
-        self.QtExtraViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY, label="Extra Viewer")
+        self.QtExtraViewer = QtFourthViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY, label="Extra Viewer")
 
         self.ViewersConnection = ViewersConnection(self.vtkBaseClass)
         self.ViewersConnection.add_orthogonal_viewer(self.QtSagittalOrthoViewer.get_viewer())
@@ -70,13 +71,33 @@ class MainWindow(QtWidgets.QMainWindow):
         # Connect signals and slots
         self.connect()
 
+        # Set the fourth viewer for oblique plane updates
+        self.QtAxialOrthoViewer.viewer.set_qt_fourth_viewer(self.QtExtraViewer)
+        self.QtCoronalOrthoViewer.viewer.set_qt_fourth_viewer(self.QtExtraViewer)
+        self.QtSagittalOrthoViewer.viewer.set_qt_fourth_viewer(self.QtExtraViewer)
+
+        # Enable the reslice cursor widget for the orthogonal viewers
+        self.QtAxialOrthoViewer.viewer.enable_reslice_cursor()
+        self.QtCoronalOrthoViewer.viewer.enable_reslice_cursor()
+        self.QtSagittalOrthoViewer.viewer.enable_reslice_cursor()
+
+        # Add observers for oblique plane updates
+        self.QtAxialOrthoViewer.viewer.resliceCursorWidget.AddObserver(
+            "ResliceAxesChangedEvent", self.oblique_update)
+        self.QtCoronalOrthoViewer.viewer.resliceCursorWidget.AddObserver(
+            "ResliceAxesChangedEvent", self.oblique_update)
+        self.QtSagittalOrthoViewer.viewer.resliceCursorWidget.AddObserver(
+            "ResliceAxesChangedEvent", self.oblique_update)
+
         # ROI Viewer
         self.roi_viewer = ROIViewer(self, self.vtkBaseClass)
         self.roi_viewer.off()
 
+    def oblique_update(self, caller, event):
+        self.QtExtraViewer.update_oblique()
+
     # Connect signals and slots         
     def connect(self):
-        self.organ_detection_widget.detection_completed.connect(self.QtExtraViewer.set_detection_results)
         self.QtAxialOrthoViewer.slice_changed.connect(self.QtExtraViewer.update_slice_outline)
         self.QtCoronalOrthoViewer.slice_changed.connect(self.QtExtraViewer.update_slice_outline)
         self.QtSagittalOrthoViewer.slice_changed.connect(self.QtExtraViewer.update_slice_outline)
